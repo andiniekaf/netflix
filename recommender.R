@@ -69,7 +69,7 @@ names(test) <- c("movie_id","user_id")
 test$rating <- NA
 
 
-## TUNING THE MATRIX FACTORIZATION ALGORITHM TO FIND OUT THE BEST 
+## TUNING THE MATRIX FACTORIZATION ALGORITHM TO FIND OUT THE BEST PARAMETER VALUE
 set.seed(145)
 r=Reco()
 opts <- r$tune(data_memory(nf$user_id,nf$movie_id, rating=nf$rating, index1=TRUE), opts=list(dim=c(5,10), lrate=c(0.05,0.1, 0.15),  niter=5, nfold=5, verbose=FALSE)) 
