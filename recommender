@@ -50,6 +50,23 @@ nf$rating <- as.numeric(nf$rating)
 summary(nf)
 
 ## DATA PREPARATION - TESTING DATA
+test <- read.table("C:/Users/Andini Eka F/Documents/R/Business Analytics EDX Course/probe.txt",sep=",",header=FALSE,fill=TRUE)
+test$V2 <- test$V1
+test$V1[!grepl(":",test$V1)] <- NA
+test$V1 <- gsub(":","",test$V1)
+head(test)
+##    V1      V2
+## 1    1      1:
+## 2 <NA>   30878
+## 3 <NA> 2647871
+## 4 <NA> 1283744
+## 5 <NA> 2488120
+## 6 <NA>  317050
+
+test$V1 <- na.locf(test$V1)
+test <- filter(test,!grepl(":",test$V2))
+names(test) <- c("movie_id","user_id")
+test$rating <- NA
 
 
 ## TUNING THE MATRIX FACTORIZATION ALGORITHM TO FIND OUT THE BEST 
@@ -62,6 +79,27 @@ opts <- r$tune(data_memory(nf$user_id,nf$movie_id, rating=nf$rating, index1=TRUE
 opts$min #to look at the best option attained during the tuning process
 r$train(data_memory(nf_3$user_id, nf_3$movie_id, rating=nf_3$rating, index1=TRUE), opts=c(opts$min, nthread=1, niter=50) #use the best option to train the the training data model
 res <- r$output(out_memory(), out_memory()) #storing the latent vectors
+pred <- r$predict(data_memory(test$user_id,test$movie_id, rating=NULL, index1=TRUE),out_memory()) #predict the ratings in the testing data
+test$pred_rating <- pred
+test$pred_rating <- round(test$pred_rating,0)
+test <- left_join(test, nf, by= c("movie_id", "user_id")) #retrieving the actual rating of the test data for further comparison with the predicted rating
+str(test)
+test$movie_id <- as.numeric(test$movie_id)
+test$user_id <- as.numeric(test$movie_id)
+test$compare <- ifelse(test$rating == test$pred_rating,1,0)
+mean(test$compare)
+## the mean is 0.5339242 -- 53.4% of the predicted ratings are accurate
+
+# calculating the RMSE
+sqrt(mean((join$pred_rating-join$rating)^2))
+# the RMSE is 0.8200581. As a benchmark, based on https://www.netflixprize.com/faq.html, Cinematch's algorithm on the same data scored a 0.9474 of RMSE
+
+
+
+
+
+
+
 
 
 
